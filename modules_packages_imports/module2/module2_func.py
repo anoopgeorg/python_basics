@@ -3,8 +3,10 @@ from os.path import abspath, join, dirname
 
 
 # Set the absolute path of this directory to the list of paths in sys.path
-sys.path.insert(0, abspath(join(dirname(__file__),'..')))
-from module1 import module1_func
+# BOC commented to avoid circular import error
+#ys.path.insert(0, abspath(join(dirname(__file__),'..')))
+#rom module1 import module1_func
+# EOC commented to avoid circular import error
 
 def module2_process_1():
     print("This is module2 processing 1")
