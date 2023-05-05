@@ -1,6 +1,7 @@
 import os ,sys
 from os.path import abspath, join, dirname
 
+
 # Set the absolute path of this directory to the list of paths in sys.path
 # BOC commented to avoid circular import error
 #ys.path.insert(0, abspath(join(dirname(__file__),'..')))
