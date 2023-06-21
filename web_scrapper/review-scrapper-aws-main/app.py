@@ -8,6 +8,8 @@ import functools
 from urllib.error import HTTPError
 import urllib.request
 import time
+from pymongo.mongo_client import MongoClient
+
 
 logging.basicConfig(filename="scrapper.log" , level=logging.INFO)
 
@@ -47,7 +49,7 @@ def get_customer_reviews(page_product_link):
     req = urllib.request.Request(url=page_product_link,headers=headers)
     try:
         open_prod_page = bs(uReq(req),'html.parser')
-        time.sleep(0.1)
+        time.sleep(0.05)
         logging.info("URLOPEN Called from -----> get_customer_reviews")
         cust_rev_boxes = open_prod_page.find_all("div",{"class":"a-section review aok-relative"})
         return page_product_link,cust_rev_boxes
@@ -109,6 +111,18 @@ def get_customer_details(product_link,cust_review_boxes):
             logging.error(error)
         return customer_review_list
 
+def connectMongo():
+    uri = "mongodb+srv://anoopgeorge:kiuHFSiLpW7mOyed@cluster0.jlvs1rq.mongodb.net/?retryWrites=true&w=majority"
+    # Create a new client and connect to the server
+    client = MongoClient(uri)
+    # Send a ping to confirm a successful connection
+    try:
+        client.admin.command('ping')
+        logging.info("Pinged your deployment. You successfully connected to MongoDB!")
+    except Exception as e:
+        logging.error(e)      
+    return client     
+
 @app.route("/review" , methods = ['POST' , 'GET'])
 def index():
     if request.method == 'POST':
@@ -132,7 +146,8 @@ def index():
         product_Links = get_product_links(product_Catalogue)
 
         product_review_list = []
-        for product in product_Links[:8]:
+        mongo_client = connectMongo()
+        for product in product_Links:
             logging.info("Product parser---> {}".format(product))
             product_review = {}
             result = get_customer_reviews(product)
@@ -142,8 +157,19 @@ def index():
                     customer_review_list = get_customer_details(product,customer_rev_boxes)
                     if customer_review_list is not None:
                         product_review_list = product_review_list + customer_review_list
-
+        scraper_db = mongo_client['scraper_db']
+        amazon_collection = scraper_db['amazon_collection']
+        final_result = {"searchString" : searchString,
+                        "product_review_list" : product_review_list
+                        }
+        logging.info("Push to mongoDB intiated")
+        try:
+            amazon_collection.insert_one(final_result)
+        except Exception as e:
+            logging.error(e)
+        logging.info("Push to mongoDB completed")
         logging.info("log my final result {}".format(product_review_list))
+        logging.shutdown()
         return render_template('result.html',reviews= product_review_list)
 
     else:
