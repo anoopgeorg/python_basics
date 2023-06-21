@@ -42,11 +42,12 @@ def get_product_links(prodCat):
 
 
 def get_customer_reviews(page_product_link):
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+    'accept-language': 'en-GB,en;q=0.9',}
     req = urllib.request.Request(url=page_product_link,headers=headers)
     try:
         open_prod_page = bs(uReq(req),'html.parser')
-        time.sleep(0.25)
+        time.sleep(0.1)
         logging.info("URLOPEN Called from -----> get_customer_reviews")
         cust_rev_boxes = open_prod_page.find_all("div",{"class":"a-section review aok-relative"})
         return page_product_link,cust_rev_boxes
@@ -97,8 +98,8 @@ def get_customer_details(product_link,cust_review_boxes):
                 "customer_unam" : customer_uname,
                 "customer_rating" : customer_rating,
                 "customer_sentiment" : customer_sentiment,
-                #"customer_review_l" : customer_review_l
-                "customer_review_l" : "customer_review_l"            
+                "customer_review_l" : customer_review_l
+                #"customer_review_l" : "customer_review_l"            
             }
             logging.info("Review Extracted {}".format(customer_review_details))
             customer_review_list.append(customer_review_details) 
@@ -111,7 +112,8 @@ def get_customer_details(product_link,cust_review_boxes):
 @app.route("/review" , methods = ['POST' , 'GET'])
 def index():
     if request.method == 'POST':
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+        'accept-language': 'en-GB,en;q=0.9',}
         searchString = request.form['content'].replace(" ","")
         app.logger.info(request.form['content'])        
         app.logger.info(searchString)
@@ -130,7 +132,7 @@ def index():
         product_Links = get_product_links(product_Catalogue)
 
         product_review_list = []
-        for product in product_Links:
+        for product in product_Links[:8]:
             logging.info("Product parser---> {}".format(product))
             product_review = {}
             result = get_customer_reviews(product)
